@@ -2,5 +2,6 @@
     <qresource prefix="/">
         <file>x-hover.svg</file>
         <file>x.svg</file>
+        <file>onedark.qss</file>
     </qresource>
 </RCC>

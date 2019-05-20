@@ -1,7 +1,9 @@
 #include "plugin.h"
 
 #include <QApplication>
+#include <QFile>
 #include <QStyleOption>
+#include <QTimer>
 
 inline void init_resource() {
     Q_INIT_RESOURCE(onedark);
@@ -36,22 +38,20 @@ OneDarkPlugin::OneDarkPlugin() {
 
 bool OneDarkPlugin::initialize([[maybe_unused]] const QStringList &arguments,
                                [[maybe_unused]] QString *errorString) {
-
     QApplication::setStyle(new OneDarkProxyStyle(QApplication::style()));
     QApplication::style()->moveToThread(QApplication::instance()->thread());
-    qApp->setStyleSheet(
-        "QTabBar::close-button { image: url(:/x.svg); } "
-        "QTabBar::close-button:hover { image: url(:/x-hover.svg); } "
-        "QTabBar::tab { padding: 0px 20px; margin: 0px; min-width: 128px; "
-        "height: 32px; background: #21252B; border-left: 1px solid #181A20; "
-        "border-right: 1px solid #21252B; border-top: 2px solid #21252b; "
-        "color: #5c6370; } QTabBar::tab:selected { background: #282c34; "
-        "color: #abb2bf; border-top: 2px solid #4b7ff0} QTabBar::tab:last { "
-        "border-right: 1px solid #181A20; } QTabBar::tab:selected:!last { "
-        "border-right: 1px solid #282c34; } QTabBar::tab:selected:only-one, "
-        "QTabBar::tab:only-one { border-right: 1px solid #181A20; } QTabBar{ "
-        "height:32px; background-color: #21252B; border: 1px solid #181A20; "
-        "border-top:none; }");
+    QTimer::singleShot(0, qApp, []() {
+        auto qssFile = QFile(":/onedark.qss");
+        qssFile.open(QIODevice::ReadOnly | QIODevice::Text);
+        auto qssStream = QTextStream(&qssFile);
+        auto qss = qssStream.readAll();
+        for (QWidget *w : qApp->topLevelWidgets()) {
+            auto tabBars = w->findChildren<QTabBar *>();
+            for (QTabBar *t : tabBars) {
+                t->setStyleSheet(qss);
+            }
+        }
+    });
     return true;
 }
 
