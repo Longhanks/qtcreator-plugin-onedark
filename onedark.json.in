@@ -1,0 +1,12 @@
+{
+    "Name" : "onedark",
+    "Version" : "${onedark_VERSION_MAJOR}.${onedark_VERSION_MINOR}.${onedark_VERSION_PATCH}",
+    "CompatVersion" : "${onedark_VERSION_MAJOR}.${onedark_VERSION_MINOR}.${onedark_VERSION_PATCH}",
+    "Vendor" : "Andreas Schulz",
+    "Copyright" : "(C) 2019 Andreas Schulz",
+    "License" : "MIT",
+    "Category" : "Qt Creator",
+    "Description" : "OneDark style additions for Qt Creator.",
+    "Url" : "https://github.com/Longhanks/qtcreator-plugin-onedark",
+    "Dependencies" : []
+}

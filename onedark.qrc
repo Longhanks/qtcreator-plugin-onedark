@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>x-hover.svg</file>
+        <file>x.svg</file>
+    </qresource>
+</RCC>
