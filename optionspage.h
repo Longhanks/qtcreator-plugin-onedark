@@ -1,24 +1,33 @@
 #pragma once
 
+#include "settings.h"
+
 #include <coreplugin/dialogs/ioptionspage.h>
 
 #include <QPointer>
-#include <QWidget>
 
 namespace OneDark::Internal {
+
+class OptionsDialog;
 
 class OptionsPage : public Core::IOptionsPage {
     Q_OBJECT
 
 public:
-    OptionsPage(QObject *parent);
+    OptionsPage(const Settings &settings, QObject *parent);
+
+    void setSettings(const Settings &settings);
 
     QWidget *widget() override;
     void apply() override;
     void finish() override;
 
+signals:
+    void settingsChanged(const Settings &settings);
+
 private:
-    QPointer<QWidget> m_widget;
+    QPointer<OptionsDialog> m_widget;
+    Settings m_settings;
 };
 
 } // namespace OneDark::Internal

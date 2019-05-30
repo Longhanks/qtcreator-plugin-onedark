@@ -1,5 +1,7 @@
 #pragma once
 
+#include "settings.h"
+
 #include <extensionsystem/iplugin.h>
 
 #include <QProxyStyle>
@@ -22,7 +24,9 @@ public:
 
 private:
     OptionsPage *m_optionsPage = nullptr;
+    Settings m_settings;
 
+    void settingsChanged(const Settings &settings);
     void setOneDarkTabsEnabled(bool enabled);
 };
 
@@ -43,6 +47,11 @@ public:
                        const QStyleOption *option,
                        QPainter *painter,
                        const QWidget *widget = nullptr) const override;
+
+    void setSettings(const Settings &settings);
+
+private:
+    Settings m_settings;
 };
 
 } // namespace OneDark::Internal
