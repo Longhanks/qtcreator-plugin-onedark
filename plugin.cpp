@@ -1,5 +1,7 @@
 #include "plugin.h"
 
+#include "optionspage.h"
+
 #include <QApplication>
 #include <QFile>
 #include <QStyleOption>
@@ -40,19 +42,31 @@ bool OneDarkPlugin::initialize([[maybe_unused]] const QStringList &arguments,
                                [[maybe_unused]] QString *errorString) {
     QApplication::setStyle(new OneDarkProxyStyle(QApplication::style()));
     QApplication::style()->moveToThread(QApplication::instance()->thread());
-    QTimer::singleShot(0, qApp, []() {
+    QTimer::singleShot(
+        0, qApp, [this]() { this->setOneDarkTabsEnabled(true); });
+
+    this->m_optionsPage = new OptionsPage(this);
+
+    return true;
+}
+
+void OneDarkPlugin::setOneDarkTabsEnabled(bool enabled) {
+    QString qss = [enabled]() -> QString {
+        if (!enabled) {
+            return QString();
+        }
         auto qssFile = QFile(":/onedark.qss");
         qssFile.open(QIODevice::ReadOnly | QIODevice::Text);
         auto qssStream = QTextStream(&qssFile);
-        auto qss = qssStream.readAll();
-        for (QWidget *w : qApp->topLevelWidgets()) {
-            auto tabBars = w->findChildren<QTabBar *>();
-            for (QTabBar *t : tabBars) {
-                t->setStyleSheet(qss);
-            }
+        return qssStream.readAll();
+    }();
+
+    for (QWidget *w : qApp->topLevelWidgets()) {
+        auto tabBars = w->findChildren<QTabBar *>();
+        for (QTabBar *t : tabBars) {
+            t->setStyleSheet(qss);
         }
-    });
-    return true;
+    }
 }
 
 OneDarkProxyStyle::OneDarkProxyStyle(QStyle *style) : QProxyStyle(style) {}

@@ -8,5 +8,7 @@
     "Category" : "Qt Creator",
     "Description" : "OneDark style additions for Qt Creator.",
     "Url" : "https://github.com/Longhanks/qtcreator-plugin-onedark",
-    "Dependencies" : []
+    "Dependencies" : [
+        { "Name" : "Core", "Version" : "${QTCREATOR_VERSION}" }
+    ]
 }

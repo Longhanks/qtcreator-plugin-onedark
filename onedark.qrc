@@ -3,5 +3,7 @@
         <file>x-hover.svg</file>
         <file>x.svg</file>
         <file>onedark.qss</file>
+        <file>atom.png</file>
+        <file>atom@2x.png</file>
     </qresource>
 </RCC>

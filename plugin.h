@@ -7,6 +7,8 @@
 
 namespace OneDark::Internal {
 
+class OptionsPage;
+
 class OneDarkPlugin : public ExtensionSystem::IPlugin {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QtCreatorPlugin" FILE
@@ -17,6 +19,11 @@ public:
     bool initialize(const QStringList &arguments,
                     QString *errorString) override;
     void extensionsInitialized() override {}
+
+private:
+    OptionsPage *m_optionsPage = nullptr;
+
+    void setOneDarkTabsEnabled(bool enabled);
 };
 
 class OneDarkProxyStyle : public QProxyStyle {

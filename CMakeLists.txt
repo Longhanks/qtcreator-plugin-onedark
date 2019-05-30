@@ -47,7 +47,7 @@ project(onedark LANGUAGES CXX VERSION 0.1.0)
 
 configure_file("${CMAKE_SOURCE_DIR}/onedark.json.in" "${CMAKE_CURRENT_BINARY_DIR}/onedark.json")
 
-add_library(onedark SHARED plugin.cpp onedark.qrc)
+add_library(onedark SHARED optionspage.cpp plugin.cpp onedark.qrc)
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "(Apple)?[Cc]lang" AND NOT MSVC)
     list(APPEND COMPILER_WARNINGS
@@ -115,7 +115,9 @@ target_include_directories(onedark SYSTEM PRIVATE
     )
 
 if (APPLE)
+    find_library(CORE_LIB NAMES Core PATHS "${QTCREATOR_BIN_DIR}/../PlugIns")
     find_library(EXTENSIONSYSTEM_LIB NAMES ExtensionSystem PATHS "${QTCREATOR_BIN_DIR}/../Frameworks")
+    find_library(UTILS_LIB NAMES Utils PATHS "${QTCREATOR_BIN_DIR}/../Frameworks")
     set(QTWIDGETS_LIB "-framework QtWidgets")
     set(QTGUI_LIB "-framework QtGui")
     set(QTCORE_LIB "-framework QtCore")
@@ -125,7 +127,9 @@ if (APPLE)
         -iframework "${QTCREATOR_BIN_DIR}/../Frameworks"
     )
 else ()
+    find_library(CORE_LIB NAMES Core PATHS "${QTCREATOR_BIN_DIR}/../lib/qtcreator/plugins")
     find_library(EXTENSIONSYSTEM_LIB NAMES ExtensionSystem PATHS "${QTCREATOR_BIN_DIR}/../lib/qtcreator")
+    find_library(UTILS_LIB NAMES Utils PATHS "${QTCREATOR_BIN_DIR}/../lib/qtcreator")
     set(QTWIDGETS_LIB "${Qt5Widgets_LIBRARIES}")
     set(QTGUI_LIB "${Qt5Gui_LIBRARIES}")
     set(QTCORE_LIB "${Qt5Core_LIBRARIES}")
@@ -133,7 +137,9 @@ else ()
 endif ()
 
 target_link_libraries(onedark PRIVATE
+    "${CORE_LIB}"
     "${EXTENSIONSYSTEM_LIB}"
+    "${UTILS_LIB}"
     "${QTWIDGETS_LIB}"
     "${QTGUI_LIB}"
     "${QTCORE_LIB}"
