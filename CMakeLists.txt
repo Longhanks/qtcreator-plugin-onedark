@@ -49,9 +49,65 @@ configure_file("${CMAKE_SOURCE_DIR}/onedark.json.in" "${CMAKE_CURRENT_BINARY_DIR
 
 add_library(onedark SHARED plugin.cpp onedark.qrc)
 
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "(Apple)?[Cc]lang" AND NOT MSVC)
+    list(APPEND COMPILER_WARNINGS
+        "-Weverything"
+        "-Wno-c++98-compat"
+        "-Wno-c++98-compat-pedantic"
+        )
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    list(APPEND COMPILER_WARNINGS
+        "-Wall"
+        "-Wcast-align"
+        "-Wcast-qual"
+        "-Wconversion"
+        "-Wctor-dtor-privacy"
+        "-Wdisabled-optimization"
+        "-Wdouble-promotion"
+        "-Wduplicated-branches"
+        "-Wduplicated-cond"
+        "-Wextra"
+        "-Wformat=2"
+        "-Winvalid-pch"
+        "-Wlogical-op"
+        "-Wmisleading-indentation"
+        "-Wmissing-include-dirs"
+        "-Wnoexcept"
+        "-Wnon-virtual-dtor"
+        "-Wnull-dereference"
+        "-Wold-style-cast"
+        "-Woverloaded-virtual"
+        "-Woverloaded-virtual"
+        "-Wpedantic"
+        "-Wpointer-arith"
+        "-Wredundant-decls"
+        "-Wshadow"
+        "-Wshift-overflow=2"
+        "-Wsign-conversion"
+        "-Wsized-deallocation"
+        "-Wtrampolines"
+        "-Wundef"
+        "-Wunused"
+        "-Wuseless-cast"
+        "-Wvector-operation-performance"
+        "-Wwrite-strings"
+        "-Wzero-as-null-pointer-constant"
+        "-pedantic-errors"
+        )
+else ()
+    message(STATUS "ToDo MSVC warnings...")
+endif ()
+string(REPLACE ";" " " COMPILER_WARNINGS_STR "${COMPILER_WARNINGS}")
+
+get_target_property(onedark_SOURCES onedark SOURCES)
+
+foreach (onedark_SOURCE ${onedark_SOURCES})
+    set_source_files_properties(${onedark_SOURCE} PROPERTIES COMPILE_FLAGS "${COMPILER_WARNINGS_STR}")
+endforeach ()
+
 set_target_properties(onedark PROPERTIES AUTOMOC ON AUTORCC ON)
 
-target_include_directories(onedark PRIVATE
+target_include_directories(onedark SYSTEM PRIVATE
     "${CMAKE_CURRENT_BINARY_DIR}"
     "${Qt5Widgets_INCLUDE_DIRS}"
     "${QTCREATOR_SRC}/src/libs"
@@ -60,12 +116,13 @@ target_include_directories(onedark PRIVATE
 
 if (APPLE)
     find_library(EXTENSIONSYSTEM_LIB NAMES ExtensionSystem PATHS "${QTCREATOR_BIN_DIR}/../Frameworks")
-    find_library(QTWIDGETS_LIB NAMES QtWidgets PATHS "${QTCREATOR_BIN_DIR}/../Frameworks" NO_DEFAULT_PATH)
-    find_library(QTGUI_LIB NAMES QtGui PATHS "${QTCREATOR_BIN_DIR}/../Frameworks" NO_DEFAULT_PATH)
-    find_library(QTCORE_LIB NAMES QtCore PATHS "${QTCREATOR_BIN_DIR}/../Frameworks" NO_DEFAULT_PATH)
+    set(QTWIDGETS_LIB "-framework QtWidgets")
+    set(QTGUI_LIB "-framework QtGui")
+    set(QTCORE_LIB "-framework QtCore")
     target_link_options(onedark PRIVATE
-        "-Wl,-install_name,@rpath/PlugIns/"
-        "-compatibility_version ${QTCREATOR_VERSION}"
+        -Wl,-install_name,@rpath/PlugIns/
+        -compatibility_version "${QTCREATOR_VERSION}"
+        -iframework "${QTCREATOR_BIN_DIR}/../Frameworks"
     )
 else ()
     find_library(EXTENSIONSYSTEM_LIB NAMES ExtensionSystem PATHS "${QTCREATOR_BIN_DIR}/../lib/qtcreator")
