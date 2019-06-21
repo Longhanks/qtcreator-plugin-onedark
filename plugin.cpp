@@ -6,6 +6,7 @@
 
 #include <QApplication>
 #include <QFile>
+#include <QPainter>
 #include <QStyleOption>
 #include <QTimer>
 
@@ -102,23 +103,64 @@ void OneDarkProxyStyle::drawControl(ControlElement element,
                                     const QStyleOption *option,
                                     QPainter *painter,
                                     const QWidget *widget) const {
-    if (this->m_settings.hideMnemonics) {
-        if (!qApp->queryKeyboardModifiers().testFlag(Qt::AltModifier)) {
-            if (element == QStyle::CE_MenuItem ||
-                element == QStyle::CE_MenuBarItem) {
+    if (element == CE_MenuBarEmptyArea) {
+        return;
+    }
+
+    if (element == QStyle::CE_MenuItem || element == QStyle::CE_MenuBarItem) {
+        if (this->m_settings.hideMnemonics) {
+            if (!qApp->queryKeyboardModifiers().testFlag(Qt::AltModifier)) {
                 if (const QStyleOptionMenuItem *styleOptionMenuItem =
                         qstyleoption_cast<const QStyleOptionMenuItem *>(
                             option)) {
-                    auto nonConstStyleOptionMenuItem =
-                        const_cast<QStyleOptionMenuItem *>(
-                            styleOptionMenuItem);
-                    replaceSingleAmpersands(nonConstStyleOptionMenuItem->text);
-                    QProxyStyle::drawControl(element, option, painter, widget);
-                    return;
+                    replaceSingleAmpersands(
+                        const_cast<QStyleOptionMenuItem *>(styleOptionMenuItem)
+                            ->text);
                 }
             }
         }
     }
+
+    if (element == CE_MenuBarItem) {
+        if (const QStyleOptionMenuItem *mbi =
+                qstyleoption_cast<const QStyleOptionMenuItem *>(option)) {
+            uint alignment = Qt::AlignCenter | Qt::TextShowMnemonic |
+                             Qt::TextDontClip | Qt::TextSingleLine;
+            if (!this->proxy()->styleHint(SH_UnderlineShortcut, mbi, widget)) {
+                alignment |= Qt::TextHideMnemonic;
+            }
+            int iconExtent = this->proxy()->pixelMetric(PM_SmallIconSize);
+            QPixmap pix = mbi->icon.pixmap(widget->window()->windowHandle(),
+                                           QSize(iconExtent, iconExtent),
+                                           (mbi->state & State_Enabled)
+                                               ? QIcon::Normal
+                                               : QIcon::Disabled);
+            if (!pix.isNull()) {
+                this->proxy()->drawItemPixmap(
+                    painter, mbi->rect, static_cast<int>(alignment), pix);
+            } else {
+                const bool isActive =
+                    widget->parentWidget()->property("active").toBool();
+                if (mbi->state & State_Enabled && !isActive) {
+                    const_cast<QStyleOptionMenuItem *>(mbi)->palette.setColor(
+                        QPalette::ButtonText, Qt::darkGray);
+                }
+                this->proxy()->drawItemText(painter,
+                                            mbi->rect,
+                                            static_cast<int>(alignment),
+                                            mbi->palette,
+                                            mbi->state & State_Enabled,
+                                            mbi->text,
+                                            QPalette::ButtonText);
+                if (mbi->state & State_Selected) {
+                    const auto hoverColor = QColor(171, 178, 191, 75);
+                    painter->fillRect(mbi->rect, QBrush(hoverColor));
+                }
+            }
+            return;
+        }
+    }
+
     QProxyStyle::drawControl(element, option, painter, widget);
 }
 
@@ -174,6 +216,18 @@ void OneDarkProxyStyle::drawPrimitive(PrimitiveElement element,
         }
     }
     QProxyStyle::drawPrimitive(element, option, painter, widget);
+}
+
+int OneDarkProxyStyle::pixelMetric(PixelMetric metric,
+                                   const QStyleOption *option,
+                                   const QWidget *widget) const {
+    if (metric == PM_MenuBarPanelWidth) {
+        return 0;
+    }
+    if (metric == PM_MenuBarVMargin) {
+        return 5;
+    }
+    return QProxyStyle::pixelMetric(metric, option, widget);
 }
 
 void OneDarkProxyStyle::setSettings(const Settings &settings) {
