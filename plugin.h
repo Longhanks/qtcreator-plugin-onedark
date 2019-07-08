@@ -51,6 +51,7 @@ public:
                     const QStyleOption *option = nullptr,
                     const QWidget *widget = nullptr) const override;
     void polish(QWidget *widget) override;
+    using QProxyStyle::polish;
 
     void setSettings(const Settings &settings);
 
