@@ -20,7 +20,7 @@ public:
 
 private:
     QCheckBox *checkBoxEnableTabBarTheme = nullptr;
-    QCheckBox *checkBoxHideMnemonics = nullptr;
+    QCheckBox *checkBoxForceHideMnemonics = nullptr;
     QCheckBox *checkBoxDisableDialogButtonBoxIcons = nullptr;
     QCheckBox *checkBoxSuppressHighlightColorFocusedTreeViewItems = nullptr;
 };

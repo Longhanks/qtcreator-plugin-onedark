@@ -5,37 +5,20 @@
 #include <coreplugin/icore.h>
 
 #include <QApplication>
+#include <QCheckBox>
 #include <QFile>
 #include <QPainter>
+#include <QPushButton>
 #include <QStyleOption>
 #include <QTimer>
+
+#include <qpa/qplatformtheme.h>
 
 inline void init_resource() {
     Q_INIT_RESOURCE(onedark);
 }
 
 namespace OneDark::Internal {
-
-static void replaceSingleAmpersands(QString &s) {
-    int lastIndex = 0;
-    while (true) {
-        lastIndex = s.indexOf("&", lastIndex);
-        if (lastIndex == -1) {
-            return;
-        }
-
-        if (s[lastIndex + 1] != '&') {
-            s.remove(lastIndex, 1);
-            lastIndex = 0;
-        } else {
-            int toSkip = 1;
-            while (s[lastIndex + toSkip] == '&') {
-                toSkip += 1;
-            }
-            lastIndex += toSkip;
-        }
-    }
-}
 
 OneDarkPlugin::OneDarkPlugin() {
     init_resource();
@@ -66,6 +49,24 @@ bool OneDarkPlugin::initialize([[maybe_unused]] const QStringList &arguments,
             [this] { this->m_settings.save(Core::ICore::settings()); });
 
     return true;
+}
+
+void OneDarkProxyStyle::polish(QWidget *widget) {
+    if (!this->m_settings.forceHideMnemonics) {
+        QProxyStyle::polish(widget);
+        return;
+    }
+    auto btn = qobject_cast<QPushButton *>(widget);
+    if (btn) {
+        auto text = QPlatformTheme::removeMnemonics(btn->text());
+        btn->setText(text);
+    }
+    auto checkbox = qobject_cast<QCheckBox *>(widget);
+    if (checkbox) {
+        auto text = QPlatformTheme::removeMnemonics(checkbox->text());
+        checkbox->setText(text);
+    }
+    QProxyStyle::polish(widget);
 }
 
 void OneDarkPlugin::settingsChanged(const Settings &settings) {
@@ -107,19 +108,23 @@ void OneDarkProxyStyle::drawControl(ControlElement element,
         return;
     }
 
-    if (element == QStyle::CE_MenuItem || element == QStyle::CE_MenuBarItem) {
-        if (this->m_settings.hideMnemonics) {
-            if (!qApp->queryKeyboardModifiers().testFlag(Qt::AltModifier)) {
-                if (const QStyleOptionMenuItem *styleOptionMenuItem =
-                        qstyleoption_cast<const QStyleOptionMenuItem *>(
-                            option)) {
-                    replaceSingleAmpersands(
-                        const_cast<QStyleOptionMenuItem *>(styleOptionMenuItem)
-                            ->text);
-                }
-            }
+    [&element, option, this]() {
+        if (element != QStyle::CE_MenuItem &&
+            element != QStyle::CE_MenuBarItem) {
+            return;
         }
-    }
+        if (!this->m_settings.forceHideMnemonics) {
+            return;
+        }
+        auto styleOptionMenuItem =
+            qstyleoption_cast<const QStyleOptionMenuItem *>(option);
+        if (!styleOptionMenuItem) {
+            return;
+        }
+        QString text =
+            QPlatformTheme::removeMnemonics(styleOptionMenuItem->text);
+        const_cast<QStyleOptionMenuItem *>(styleOptionMenuItem)->text = text;
+    }();
 
     if (element == CE_MenuBarItem) {
         if (const QStyleOptionMenuItem *mbi =
@@ -168,18 +173,8 @@ int OneDarkProxyStyle::styleHint(StyleHint hint,
                                  const QStyleOption *opt,
                                  const QWidget *widget,
                                  QStyleHintReturn *returnData) const {
-    if (this->m_settings.hideMnemonics) {
+    if (this->m_settings.forceHideMnemonics) {
         if (hint == QStyle::SH_UnderlineShortcut) {
-            if (qApp->queryKeyboardModifiers().testFlag(Qt::AltModifier)) {
-                return QProxyStyle::styleHint(hint, opt, widget, returnData);
-            }
-            return 0;
-        }
-
-        if (hint == QStyle::SH_MenuBar_AltKeyNavigation) {
-            if (qApp->queryKeyboardModifiers().testFlag(Qt::AltModifier)) {
-                return QProxyStyle::styleHint(hint, opt, widget, returnData);
-            }
             return 0;
         }
     }

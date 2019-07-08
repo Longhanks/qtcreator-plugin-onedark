@@ -15,11 +15,11 @@ OptionsDialog::OptionsDialog(QWidget *parent) : QWidget(parent) {
         new QCheckBox(checkBoxEnableTabBarThemeText, this);
     layout->addWidget(this->checkBoxEnableTabBarTheme);
 
-    auto checkBoxHideMnemonicsText =
-        tr("Hide mnemonics unless Alt is pressed");
-    this->checkBoxHideMnemonics =
-        new QCheckBox(checkBoxHideMnemonicsText, this);
-    layout->addWidget(this->checkBoxHideMnemonics);
+    auto checkBoxForceHideMnemonicsText =
+        tr("Force hide mnemonics (required restart)");
+    this->checkBoxForceHideMnemonics =
+        new QCheckBox(checkBoxForceHideMnemonicsText, this);
+    layout->addWidget(this->checkBoxForceHideMnemonics);
 
     auto checkBoxDisableDialogButtonBoxIconsText =
         tr("Disable dialog button box icons");
@@ -40,7 +40,7 @@ OptionsDialog::OptionsDialog(QWidget *parent) : QWidget(parent) {
 
 void OptionsDialog::setSettings(const Settings &settings) {
     this->checkBoxEnableTabBarTheme->setChecked(settings.enableTabBarTheme);
-    this->checkBoxHideMnemonics->setChecked(settings.hideMnemonics);
+    this->checkBoxForceHideMnemonics->setChecked(settings.forceHideMnemonics);
     this->checkBoxDisableDialogButtonBoxIcons->setChecked(
         settings.disableDialogButtonBoxIcons);
     this->checkBoxSuppressHighlightColorFocusedTreeViewItems->setChecked(
@@ -50,7 +50,8 @@ void OptionsDialog::setSettings(const Settings &settings) {
 Settings OptionsDialog::settings() {
     Settings settings;
     settings.enableTabBarTheme = this->checkBoxEnableTabBarTheme->isChecked();
-    settings.hideMnemonics = this->checkBoxHideMnemonics->isChecked();
+    settings.forceHideMnemonics =
+        this->checkBoxForceHideMnemonics->isChecked();
     settings.disableDialogButtonBoxIcons =
         this->checkBoxDisableDialogButtonBoxIcons->isChecked();
     settings.suppressHighlightColorFocusedTreeViewItems =

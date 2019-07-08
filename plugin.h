@@ -50,6 +50,7 @@ public:
     int pixelMetric(PixelMetric metric,
                     const QStyleOption *option = nullptr,
                     const QWidget *widget = nullptr) const override;
+    void polish(QWidget *widget) override;
 
     void setSettings(const Settings &settings);
 

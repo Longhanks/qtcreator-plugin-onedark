@@ -8,7 +8,7 @@ class Settings {
 
 public:
     bool enableTabBarTheme = true;
-    bool hideMnemonics = true;
+    bool forceHideMnemonics = true;
     bool disableDialogButtonBoxIcons = true;
     bool suppressHighlightColorFocusedTreeViewItems = true;
 

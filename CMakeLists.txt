@@ -115,6 +115,8 @@ endforeach ()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES AUTOMOC ON AUTORCC ON)
 
+target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${Qt5Gui_PRIVATE_INCLUDE_DIRS})
+
 target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE
     "${CMAKE_CURRENT_BINARY_DIR}"
     "${Qt5Widgets_INCLUDE_DIRS}"

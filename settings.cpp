@@ -7,7 +7,7 @@ namespace OneDark::Internal {
 void Settings::save(QSettings *settings) const {
     settings->beginGroup("OneDarkPlugin");
     settings->setValue("enableTabBarTheme", this->enableTabBarTheme);
-    settings->setValue("hideMnemonics", this->hideMnemonics);
+    settings->setValue("forceHideMnemonics", this->forceHideMnemonics);
     settings->setValue("disableDialogButtonBoxIcons",
                        this->disableDialogButtonBoxIcons);
     settings->setValue("suppressHighlightColorFocusedTreeViewItems",
@@ -20,7 +20,8 @@ void Settings::load(QSettings *settings) {
     settings->beginGroup("OneDarkPlugin");
     this->enableTabBarTheme =
         settings->value("enableTabBarTheme", true).toBool();
-    this->hideMnemonics = settings->value("hideMnemonics", true).toBool();
+    this->forceHideMnemonics =
+        settings->value("forceHideMnemonics", true).toBool();
     this->disableDialogButtonBoxIcons =
         settings->value("disableDialogButtonBoxIcons", true).toBool();
     this->suppressHighlightColorFocusedTreeViewItems =
@@ -31,7 +32,7 @@ void Settings::load(QSettings *settings) {
 
 bool Settings::equals(const Settings &other) const {
     return (this->enableTabBarTheme == other.enableTabBarTheme) &&
-           (this->hideMnemonics == other.hideMnemonics) &&
+           (this->forceHideMnemonics == other.forceHideMnemonics) &&
            (this->disableDialogButtonBoxIcons ==
             other.disableDialogButtonBoxIcons) &&
            (this->suppressHighlightColorFocusedTreeViewItems ==
