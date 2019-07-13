@@ -11,7 +11,7 @@ OptionsPage::OptionsPage(const Settings &settings, QObject *parent)
     this->setDisplayName("General");
     this->setCategory("OneDark");
     this->setDisplayCategory("OneDark");
-    auto iconMask = QStringLiteral(":/atom.png");
+    auto iconMask = QStringLiteral(":/icons/atom.png");
     auto iconColor = Utils::Theme::PanelTextColorDark;
     auto iconStyle = Utils::Icon::Tint;
     this->setCategoryIcon(Utils::Icon({{iconMask, iconColor}}, iconStyle));

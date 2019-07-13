@@ -57,6 +57,9 @@ public:
 
 private:
     Settings m_settings;
+
+    QIcon m_iconTabCloseNormal;
+    QIcon m_iconTabCloseHover;
 };
 
 } // namespace OneDark::Internal

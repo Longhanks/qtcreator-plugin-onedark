@@ -1,9 +1,9 @@
 <RCC>
     <qresource prefix="/">
-        <file>x-hover.svg</file>
-        <file>x.svg</file>
         <file>onedark.qss</file>
-        <file>atom.png</file>
-        <file>atom@2x.png</file>
+        <file>icons/atom.png</file>
+        <file>icons/atom@2x.png</file>
+        <file>icons/tab-close-hover.svg</file>
+        <file>icons/tab-close-normal.svg</file>
     </qresource>
 </RCC>

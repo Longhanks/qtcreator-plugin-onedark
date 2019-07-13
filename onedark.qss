@@ -1,16 +1,6 @@
-QTabBar::close-button {
-    image: url(:/x.svg);
-}
-
-QTabBar::close-button:hover {
-    image: url(:/x-hover.svg);
-}
-
 QTabBar::tab {
     padding: 0px 20px;
     margin: 0px;
-    min-width: 128px;
-    height: 32px;
     background: #21252B;
     border-left: 1px solid #181A20;
     border-right: 1px solid #21252B;
@@ -38,7 +28,6 @@ QTabBar::tab:only-one {
 }
 
 QTabBar {
-    height: 32px;
     background-color: #21252B;
     border: 1px solid #181A20;
     border-top:none;

@@ -98,7 +98,10 @@ void OneDarkPlugin::setOneDarkTabsEnabled(bool enabled) {
     }
 }
 
-OneDarkProxyStyle::OneDarkProxyStyle(QStyle *style) : QProxyStyle(style) {}
+OneDarkProxyStyle::OneDarkProxyStyle(QStyle *style) : QProxyStyle(style) {
+    this->m_iconTabCloseNormal = QIcon(":/icons/tab-close-normal.svg");
+    this->m_iconTabCloseHover = QIcon(":/icons/tab-close-hover.svg");
+}
 
 void OneDarkProxyStyle::drawControl(ControlElement element,
                                     const QStyleOption *option,
@@ -194,6 +197,18 @@ void OneDarkProxyStyle::drawPrimitive(PrimitiveElement element,
                                       const QWidget *widget) const {
     if (this->m_settings.enableTabBarTheme) {
         if (element == QStyle::PE_FrameTabBarBase) {
+            return;
+        }
+        if (element == QStyle::PE_IndicatorTabClose) {
+            auto iconPixmap = [option, this]() -> QPixmap {
+                if ((option->state & State_Enabled) &&
+                    (option->state & State_MouseOver)) {
+                    return this->m_iconTabCloseHover.pixmap(QSize(16, 16));
+                }
+                return this->m_iconTabCloseNormal.pixmap(QSize(16, 16));
+            }();
+            this->proxy()->drawItemPixmap(
+                painter, option->rect, Qt::AlignCenter, iconPixmap);
             return;
         }
     }
