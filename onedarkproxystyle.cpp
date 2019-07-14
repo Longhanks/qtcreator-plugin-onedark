@@ -7,6 +7,8 @@
 
 #include <qpa/qplatformtheme.h>
 
+#include <cmath>
+
 namespace OneDark::Internal {
 
 OneDarkProxyStyle::OneDarkProxyStyle(QStyle *style) : QProxyStyle(style) {
