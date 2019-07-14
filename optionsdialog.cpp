@@ -10,13 +10,14 @@ namespace OneDark::Internal {
 OptionsDialog::OptionsDialog(QWidget *parent) : QWidget(parent) {
     auto layout = new QVBoxLayout(this);
 
-    auto checkBoxEnableTabBarThemeText = tr("Enable tab bar theme");
+    auto checkBoxEnableTabBarThemeText =
+        tr("Enable tab bar theme (restart required)");
     this->checkBoxEnableTabBarTheme =
         new QCheckBox(checkBoxEnableTabBarThemeText, this);
     layout->addWidget(this->checkBoxEnableTabBarTheme);
 
     auto checkBoxForceHideMnemonicsText =
-        tr("Force hide mnemonics (required restart)");
+        tr("Force hide mnemonics (restart required)");
     this->checkBoxForceHideMnemonics =
         new QCheckBox(checkBoxForceHideMnemonicsText, this);
     layout->addWidget(this->checkBoxForceHideMnemonics);

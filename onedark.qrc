@@ -1,6 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>onedark.qss</file>
         <file>icons/atom.png</file>
         <file>icons/atom@2x.png</file>
         <file>icons/tab-close-hover.svg</file>
