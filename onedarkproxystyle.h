@@ -33,6 +33,8 @@ public:
                     const QWidget *widget = nullptr) const override;
     void polish(QWidget *widget) override;
     using QProxyStyle::polish;
+    void unpolish(QWidget *widget) override;
+    using QProxyStyle::unpolish;
 
     void setSettings(const Settings &settings);
 

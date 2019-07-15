@@ -149,6 +149,8 @@ void OneDarkProxyStyle::drawControl(ControlElement element,
             painter->save();
             if (selected) {
                 painter->setBrush(QBrush(QColor(40, 44, 52)));
+            } else if (static_cast<bool>(option->state & State_MouseOver)) {
+                painter->setBrush(QBrush(QColor(37, 41, 48)));
             } else {
                 painter->setBrush(QBrush(QColor(33, 37, 43)));
             }
@@ -389,7 +391,19 @@ void OneDarkProxyStyle::polish(QWidget *widget) {
         auto text = QPlatformTheme::removeMnemonics(checkbox->text());
         checkbox->setText(text);
     }
+    auto tabbar = qobject_cast<QTabBar *>(widget);
+    if (tabbar) {
+        tabbar->setAttribute(Qt::WidgetAttribute::WA_Hover);
+    }
     QProxyStyle::polish(widget);
+}
+
+void OneDarkProxyStyle::unpolish(QWidget *widget) {
+    auto tabbar = qobject_cast<QTabBar *>(widget);
+    if (tabbar) {
+        tabbar->setAttribute(Qt::WidgetAttribute::WA_Hover, false);
+    }
+    QProxyStyle::unpolish(widget);
 }
 
 void OneDarkProxyStyle::setSettings(const Settings &settings) {
