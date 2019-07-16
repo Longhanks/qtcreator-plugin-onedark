@@ -1,5 +1,7 @@
 #include "onedarkproxystyle.h"
 
+#include <utils/theme/theme.h>
+
 #include <QCheckBox>
 #include <QPainter>
 #include <QPushButton>
@@ -108,9 +110,15 @@ void OneDarkProxyStyle::drawControl(ControlElement element,
             } else {
                 const bool isActive =
                     widget->parentWidget()->property("active").toBool();
-                if (mbi->state & State_Enabled && !isActive) {
+                if (mbi->state & State_Enabled &&
+                    !(mbi->state & State_Selected) && !isActive) {
                     const_cast<QStyleOptionMenuItem *>(mbi)->palette.setColor(
-                        QPalette::ButtonText, Qt::darkGray);
+                        QPalette::ButtonText, QColor(92, 99, 112));
+                }
+                if (mbi->state & State_Selected) {
+                    auto hoverColor = Utils::creatorTheme()->color(
+                        Utils::Theme::FancyToolButtonHoverColor);
+                    painter->fillRect(mbi->rect, QBrush(hoverColor));
                 }
                 this->proxy()->drawItemText(painter,
                                             mbi->rect,
@@ -119,10 +127,6 @@ void OneDarkProxyStyle::drawControl(ControlElement element,
                                             mbi->state & State_Enabled,
                                             mbi->text,
                                             QPalette::ButtonText);
-                if (mbi->state & State_Selected) {
-                    const auto hoverColor = QColor(171, 178, 191, 75);
-                    painter->fillRect(mbi->rect, QBrush(hoverColor));
-                }
             }
             return;
         }
@@ -175,6 +179,14 @@ void OneDarkProxyStyle::drawControl(ControlElement element,
                                   option->rect.width() - 2,
                                   2,
                                   QColor(75, 127, 240));
+            } else if (static_cast<bool>(option->state & State_MouseOver)) {
+                painter->fillRect(
+                    option->rect.left() + 1,
+                    option->rect.top(),
+                    option->rect.width() - 2,
+                    2,
+                    Utils::creatorTheme()->color(
+                        Utils::Theme::FancyToolButtonHoverColor));
             } else {
                 painter->fillRect(option->rect.left(),
                                   option->rect.top(),
