@@ -329,7 +329,13 @@ QRect OneDarkProxyStyle::subElementRect(QStyle::SubElement element,
             case QTabBar::TriangularEast:
                 atTheTop = (element == SE_TabBarTabRightButton);
                 break;
-            default:
+            case QTabBar::RoundedNorth:
+                [[fallthrough]];
+            case QTabBar::RoundedSouth:
+                [[fallthrough]];
+            case QTabBar::TriangularNorth:
+                [[fallthrough]];
+            case QTabBar::TriangularSouth:
                 if (element == SE_TabBarTabLeftButton) {
                     r = QRect(tab->rect.x() + hpadding, midHeight, w, h);
                 } else {
