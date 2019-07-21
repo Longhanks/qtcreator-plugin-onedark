@@ -2,6 +2,7 @@
 
 #include "faderholder.h"
 #include "onedarkproxystyle.h"
+#include "widthstretcher.h"
 
 #include <QHoverEvent>
 #include <QPropertyAnimation>
@@ -14,6 +15,25 @@ bool TabHoverFilter::eventFilter(QObject *watched, QEvent *event) {
     if (tabBar == nullptr) {
         return false;
     }
+    if (event->type() == QEvent::MouseButtonPress) {
+        this->m_block = true;
+        if (this->m_lastHoveredTabIndex >= 0) {
+            auto *holder = OneDarkProxyStyle::faderForTabBarIndex(
+                tabBar, static_cast<std::size_t>(this->m_lastHoveredTabIndex));
+            holder->setFader(0.0);
+        }
+        return false;
+    }
+
+    if (event->type() == QEvent::MouseButtonRelease) {
+        this->m_block = false;
+        return false;
+    }
+
+    if (this->m_block) {
+        return false;
+    }
+
     if (event->type() == QEvent::HoverEnter) {
         auto hoverEvent = static_cast<QHoverEvent *>(event);
         this->m_lastHoveredTabIndex = tabBar->tabAt(hoverEvent->pos());
@@ -21,6 +41,9 @@ bool TabHoverFilter::eventFilter(QObject *watched, QEvent *event) {
             auto *holder = OneDarkProxyStyle::faderForTabBarIndex(
                 tabBar, static_cast<std::size_t>(this->m_lastHoveredTabIndex));
             holder->startFadeIn();
+            auto *widthStretcher =
+                OneDarkProxyStyle::widthStretcherForTabBar(tabBar);
+            widthStretcher->startScale();
         }
     } else if (event->type() == QEvent::HoverMove) {
         auto hoverEvent = static_cast<QHoverEvent *>(event);
@@ -38,6 +61,9 @@ bool TabHoverFilter::eventFilter(QObject *watched, QEvent *event) {
                     tabBar,
                     static_cast<std::size_t>(this->m_lastHoveredTabIndex));
                 holder->startFadeIn();
+                auto *widthStretcher =
+                    OneDarkProxyStyle::widthStretcherForTabBar(tabBar);
+                widthStretcher->startScale();
             }
         }
     } else if (event->type() == QEvent::HoverLeave) {

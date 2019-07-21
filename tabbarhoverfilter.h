@@ -15,6 +15,7 @@ protected:
 
 private:
     int m_lastHoveredTabIndex = -1;
+    bool m_block = false;
 };
 
 } // namespace OneDark::Internal

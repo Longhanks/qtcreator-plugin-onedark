@@ -58,6 +58,7 @@ add_library(${PROJECT_NAME} SHARED
     plugin.cpp
     settings.cpp
     tabbarhoverfilter.cpp
+    widthstretcher.cpp
 )
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "(Apple)?[Cc]lang" AND NOT MSVC)

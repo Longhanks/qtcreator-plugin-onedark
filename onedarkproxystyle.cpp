@@ -2,6 +2,7 @@
 
 #include "faderholder.h"
 #include "tabbarhoverfilter.h"
+#include "widthstretcher.h"
 
 #include <utils/theme/theme.h>
 
@@ -17,12 +18,24 @@
 
 namespace OneDark::Internal {
 
-static std::unordered_map<QTabBar *, std::vector<FaderHolder *>> faders;
-static std::unordered_map<QTabBar *, TabHoverFilter *> filters;
+static std::unordered_map<const QTabBar *, std::vector<FaderHolder *>> *faders;
+static std::unordered_map<const QTabBar *, WidthStretcher *> *widthStretchers;
+static std::unordered_map<const QTabBar *, TabHoverFilter *> *filters;
 
 OneDarkProxyStyle::OneDarkProxyStyle(QStyle *style) : QProxyStyle(style) {
     this->m_iconTabCloseNormal = QIcon(":/icons/tab-close-normal.svg");
     this->m_iconTabCloseHover = QIcon(":/icons/tab-close-hover.svg");
+    faders =
+        new std::unordered_map<const QTabBar *, std::vector<FaderHolder *>>;
+    widthStretchers =
+        new std::unordered_map<const QTabBar *, WidthStretcher *>;
+    filters = new std::unordered_map<const QTabBar *, TabHoverFilter *>;
+}
+
+OneDarkProxyStyle::~OneDarkProxyStyle() noexcept {
+    delete faders;
+    delete widthStretchers;
+    delete filters;
 }
 
 void OneDarkProxyStyle::drawPrimitive(PrimitiveElement element,
@@ -196,7 +209,7 @@ void OneDarkProxyStyle::drawControl(ControlElement element,
                 painter->save();
                 auto tabbar = static_cast<const QTabBar *>(widget);
                 auto currentIndex = tabbar->tabAt(option->rect.topLeft());
-                auto fader = faderForTabBarIndex(
+                auto fader = OneDarkProxyStyle::faderForTabBarIndex(
                     const_cast<QTabBar *>(tabbar),
                     static_cast<std::size_t>(currentIndex));
                 auto hoverColor = QColor(37, 41, 48);
@@ -213,14 +226,24 @@ void OneDarkProxyStyle::drawControl(ControlElement element,
                                   option->rect.height() - 2);
                 painter->restore();
 
+                auto widthStretcher =
+                    OneDarkProxyStyle::widthStretcherForTabBar(
+                        const_cast<QTabBar *>(tabbar));
                 auto topBarHoverColor = Utils::creatorTheme()->color(
                     Utils::Theme::FancyToolButtonHoverColor);
                 topBarHoverColor.setAlpha(
                     static_cast<int>(hoverColor.alpha() * fader->fader()));
 
-                painter->fillRect(option->rect.left() + 1,
+                auto topBarWidth =
+                    static_cast<int>((option->rect.width() - 2) *
+                                     widthStretcher->scaleFactor());
+                auto topBarTopLeft = static_cast<int>(
+                    option->rect.left() + 1 +
+                    ((option->rect.width() - 2) / 2) - (topBarWidth / 2));
+
+                painter->fillRect(topBarTopLeft,
                                   option->rect.top(),
-                                  option->rect.width() - 2,
+                                  topBarWidth,
                                   2,
                                   topBarHoverColor);
             }
@@ -442,9 +465,10 @@ void OneDarkProxyStyle::polish(QWidget *widget) {
     auto tabBar = qobject_cast<QTabBar *>(widget);
     if (tabBar) {
         tabBar->setAttribute(Qt::WidgetAttribute::WA_Hover);
-        faders[tabBar] = {};
-        filters[tabBar] = new TabHoverFilter(this);
-        tabBar->installEventFilter(filters[tabBar]);
+        (*faders)[tabBar] = {};
+        (*widthStretchers)[tabBar] = new WidthStretcher(tabBar, this);
+        (*filters)[tabBar] = new TabHoverFilter(this);
+        tabBar->installEventFilter((*filters)[tabBar]);
     }
     QProxyStyle::polish(widget);
 }
@@ -452,14 +476,17 @@ void OneDarkProxyStyle::polish(QWidget *widget) {
 void OneDarkProxyStyle::unpolish(QWidget *widget) {
     auto tabBar = qobject_cast<QTabBar *>(widget);
     if (tabBar) {
-        tabBar->removeEventFilter(filters[tabBar]);
-        TabHoverFilter *filter = filters[tabBar];
+        TabHoverFilter *filter = (*filters)[tabBar];
+        tabBar->removeEventFilter(filter);
         delete filter;
-        filters.erase(tabBar);
-        std::for_each(std::begin(faders[tabBar]),
-                      std::end(faders[tabBar]),
+        filters->erase(tabBar);
+        WidthStretcher *widthStretcher = (*widthStretchers)[tabBar];
+        delete widthStretcher;
+        widthStretchers->erase(tabBar);
+        std::for_each(std::begin((*faders)[tabBar]),
+                      std::end((*faders)[tabBar]),
                       std::default_delete<FaderHolder>());
-        faders.erase(tabBar);
+        faders->erase(tabBar);
         tabBar->setAttribute(Qt::WidgetAttribute::WA_Hover, false);
     }
     QProxyStyle::unpolish(widget);
@@ -471,15 +498,19 @@ void OneDarkProxyStyle::setSettings(const Settings &settings) {
 
 FaderHolder *OneDarkProxyStyle::faderForTabBarIndex(QTabBar *tabBar,
                                                     std::size_t index) {
-    if (faders[tabBar].size() < index + 1) {
-        faders[tabBar].resize(index + 1);
+    if ((*faders)[tabBar].size() < index + 1) {
+        (*faders)[tabBar].resize(index + 1);
     }
-    auto *holder = faders[tabBar][index];
+    auto *holder = (*faders)[tabBar][index];
     if (holder == nullptr) {
         holder = new FaderHolder(tabBar);
-        faders[tabBar][index] = holder;
+        (*faders)[tabBar][index] = holder;
     }
     return holder;
+}
+
+WidthStretcher *OneDarkProxyStyle::widthStretcherForTabBar(QTabBar *tabBar) {
+    return (*widthStretchers)[tabBar];
 }
 
 void OneDarkProxyStyle::tabLayout(const QStyleOptionTab *opt,

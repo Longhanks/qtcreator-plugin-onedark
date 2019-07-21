@@ -10,12 +10,14 @@ class QTabBar;
 namespace OneDark::Internal {
 
 class FaderHolder;
+class WidthStretcher;
 
 class OneDarkProxyStyle : public QProxyStyle {
     Q_OBJECT
 
 public:
     OneDarkProxyStyle(QStyle *style = nullptr);
+    ~OneDarkProxyStyle() noexcept override;
     void drawPrimitive(PrimitiveElement element,
                        const QStyleOption *option,
                        QPainter *painter,
@@ -42,6 +44,7 @@ public:
     void setSettings(const Settings &settings);
     static FaderHolder *faderForTabBarIndex(QTabBar *tabBar,
                                             std::size_t index);
+    static WidthStretcher *widthStretcherForTabBar(QTabBar *tabBar);
 
 private:
     Settings m_settings;
