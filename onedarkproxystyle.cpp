@@ -1,5 +1,8 @@
 #include "onedarkproxystyle.h"
 
+#include "faderholder.h"
+#include "tabbarhoverfilter.h"
+
 #include <utils/theme/theme.h>
 
 #include <QCheckBox>
@@ -10,8 +13,12 @@
 #include <qpa/qplatformtheme.h>
 
 #include <cmath>
+#include <unordered_map>
 
 namespace OneDark::Internal {
+
+static std::unordered_map<QTabBar *, std::vector<FaderHolder *>> faders;
+static std::unordered_map<QTabBar *, TabHoverFilter *> filters;
 
 OneDarkProxyStyle::OneDarkProxyStyle(QStyle *style) : QProxyStyle(style) {
     this->m_iconTabCloseNormal = QIcon(":/icons/tab-close-normal.svg");
@@ -153,8 +160,6 @@ void OneDarkProxyStyle::drawControl(ControlElement element,
             painter->save();
             if (selected) {
                 painter->setBrush(QBrush(QColor(40, 44, 52)));
-            } else if (static_cast<bool>(option->state & State_MouseOver)) {
-                painter->setBrush(QBrush(QColor(37, 41, 48)));
             } else {
                 painter->setBrush(QBrush(QColor(33, 37, 43)));
             }
@@ -179,20 +184,45 @@ void OneDarkProxyStyle::drawControl(ControlElement element,
                                   option->rect.width() - 2,
                                   2,
                                   QColor(75, 127, 240));
-            } else if (static_cast<bool>(option->state & State_MouseOver)) {
-                painter->fillRect(
-                    option->rect.left() + 1,
-                    option->rect.top(),
-                    option->rect.width() - 2,
-                    2,
-                    Utils::creatorTheme()->color(
-                        Utils::Theme::FancyToolButtonHoverColor));
             } else {
                 painter->fillRect(option->rect.left(),
                                   option->rect.top(),
                                   option->rect.width(),
                                   1,
                                   QColor(24, 26, 32));
+            }
+
+            if (!selected) {
+                painter->save();
+                auto tabbar = static_cast<const QTabBar *>(widget);
+                auto currentIndex = tabbar->tabAt(option->rect.topLeft());
+                auto fader = faderForTabBarIndex(
+                    const_cast<QTabBar *>(tabbar),
+                    static_cast<std::size_t>(currentIndex));
+                auto hoverColor = QColor(37, 41, 48);
+                hoverColor.setAlpha(
+                    static_cast<int>(hoverColor.alpha() * fader->fader()));
+                painter->setBrush(QBrush(hoverColor));
+                auto width = option->rect.width();
+                if (lastTab || onlyOne) {
+                    width -= 1;
+                }
+                painter->drawRect(option->rect.left() + 1,
+                                  option->rect.top() + 2,
+                                  width - 1,
+                                  option->rect.height() - 2);
+                painter->restore();
+
+                auto topBarHoverColor = Utils::creatorTheme()->color(
+                    Utils::Theme::FancyToolButtonHoverColor);
+                topBarHoverColor.setAlpha(
+                    static_cast<int>(hoverColor.alpha() * fader->fader()));
+
+                painter->fillRect(option->rect.left() + 1,
+                                  option->rect.top(),
+                                  option->rect.width() - 2,
+                                  2,
+                                  topBarHoverColor);
             }
         }
         painter->restore();
@@ -409,23 +439,47 @@ void OneDarkProxyStyle::polish(QWidget *widget) {
         auto text = QPlatformTheme::removeMnemonics(checkbox->text());
         checkbox->setText(text);
     }
-    auto tabbar = qobject_cast<QTabBar *>(widget);
-    if (tabbar) {
-        tabbar->setAttribute(Qt::WidgetAttribute::WA_Hover);
+    auto tabBar = qobject_cast<QTabBar *>(widget);
+    if (tabBar) {
+        tabBar->setAttribute(Qt::WidgetAttribute::WA_Hover);
+        faders[tabBar] = {};
+        filters[tabBar] = new TabHoverFilter(this);
+        tabBar->installEventFilter(filters[tabBar]);
     }
     QProxyStyle::polish(widget);
 }
 
 void OneDarkProxyStyle::unpolish(QWidget *widget) {
-    auto tabbar = qobject_cast<QTabBar *>(widget);
-    if (tabbar) {
-        tabbar->setAttribute(Qt::WidgetAttribute::WA_Hover, false);
+    auto tabBar = qobject_cast<QTabBar *>(widget);
+    if (tabBar) {
+        tabBar->removeEventFilter(filters[tabBar]);
+        TabHoverFilter *filter = filters[tabBar];
+        delete filter;
+        filters.erase(tabBar);
+        std::for_each(std::begin(faders[tabBar]),
+                      std::end(faders[tabBar]),
+                      std::default_delete<FaderHolder>());
+        faders.erase(tabBar);
+        tabBar->setAttribute(Qt::WidgetAttribute::WA_Hover, false);
     }
     QProxyStyle::unpolish(widget);
 }
 
 void OneDarkProxyStyle::setSettings(const Settings &settings) {
     this->m_settings = settings;
+}
+
+FaderHolder *OneDarkProxyStyle::faderForTabBarIndex(QTabBar *tabBar,
+                                                    std::size_t index) {
+    if (faders[tabBar].size() < index + 1) {
+        faders[tabBar].resize(index + 1);
+    }
+    auto *holder = faders[tabBar][index];
+    if (holder == nullptr) {
+        holder = new FaderHolder(tabBar);
+        faders[tabBar][index] = holder;
+    }
+    return holder;
 }
 
 void OneDarkProxyStyle::tabLayout(const QStyleOptionTab *opt,

@@ -49,7 +49,16 @@ project(onedark LANGUAGES CXX VERSION 0.1.0)
 
 configure_file("${CMAKE_SOURCE_DIR}/onedark.json.in" "${CMAKE_CURRENT_BINARY_DIR}/onedark.json")
 
-add_library(${PROJECT_NAME} SHARED onedark.qrc onedarkproxystyle.cpp optionsdialog.cpp optionspage.cpp plugin.cpp settings.cpp)
+add_library(${PROJECT_NAME} SHARED
+    faderholder.cpp
+    onedark.qrc
+    onedarkproxystyle.cpp
+    optionsdialog.cpp
+    optionspage.cpp
+    plugin.cpp
+    settings.cpp
+    tabbarhoverfilter.cpp
+)
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "(Apple)?[Cc]lang" AND NOT MSVC)
     list(APPEND COMPILER_WARNINGS

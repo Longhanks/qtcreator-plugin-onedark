@@ -5,8 +5,11 @@
 #include <QProxyStyle>
 
 class QStyleOptionTab;
+class QTabBar;
 
 namespace OneDark::Internal {
+
+class FaderHolder;
 
 class OneDarkProxyStyle : public QProxyStyle {
     Q_OBJECT
@@ -37,6 +40,8 @@ public:
     using QProxyStyle::unpolish;
 
     void setSettings(const Settings &settings);
+    static FaderHolder *faderForTabBarIndex(QTabBar *tabBar,
+                                            std::size_t index);
 
 private:
     Settings m_settings;
