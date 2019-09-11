@@ -14,6 +14,7 @@
 #include <qpa/qplatformtheme.h>
 
 #include <cmath>
+#include <memory>
 #include <unordered_map>
 
 namespace OneDark::Internal {
