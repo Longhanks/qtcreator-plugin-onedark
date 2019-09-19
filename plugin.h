@@ -10,13 +10,15 @@ namespace OneDark::Internal {
 
 class OptionsPage;
 
-class OneDarkPlugin : public ExtensionSystem::IPlugin {
+class OneDarkPlugin final : public ExtensionSystem::IPlugin {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QtCreatorPlugin" FILE
                           "onedark.json")
 
 public:
-    OneDarkPlugin();
+    explicit OneDarkPlugin() noexcept;
+    ~OneDarkPlugin() noexcept override;
+
     bool initialize(const QStringList &arguments,
                     QString *errorString) override;
     void extensionsInitialized() override {}
@@ -25,7 +27,7 @@ private:
     OptionsPage *m_optionsPage = nullptr;
     Settings m_settings;
 
-    void settingsChanged(const Settings &settings);
+    void onSettingsChanged(Settings settings) noexcept;
 };
 
 } // namespace OneDark::Internal

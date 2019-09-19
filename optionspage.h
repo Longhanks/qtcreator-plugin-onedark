@@ -10,20 +10,20 @@ namespace OneDark::Internal {
 
 class OptionsDialog;
 
-class OptionsPage : public Core::IOptionsPage {
+class OptionsPage final : public Core::IOptionsPage {
     Q_OBJECT
 
 public:
-    OptionsPage(const Settings &settings, QObject *parent);
+    explicit OptionsPage(const Settings &settings, QObject *parent) noexcept;
 
-    void setSettings(const Settings &settings);
+    void setSettings(Settings settings) noexcept;
 
     QWidget *widget() override;
     void apply() override;
     void finish() override;
 
 signals:
-    void settingsChanged(const Settings &settings);
+    void settingsChanged(Settings settings);
 
 private:
     QPointer<OptionsDialog> m_widget;

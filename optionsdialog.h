@@ -8,15 +8,14 @@ namespace OneDark::Internal {
 
 class Settings;
 
-class OptionsDialog : public QWidget {
+class OptionsDialog final : public QWidget {
     Q_OBJECT
 
 public:
-    explicit OptionsDialog(QWidget *parent = nullptr);
-    ~OptionsDialog() override = default;
+    explicit OptionsDialog(QWidget *parent = nullptr) noexcept;
 
-    void setSettings(const Settings &settings);
-    Settings settings();
+    void setSettings(const Settings &settings) noexcept;
+    Settings settings() const noexcept;
 
 private:
     QCheckBox *checkBoxEnableTabBarTheme = nullptr;

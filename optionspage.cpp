@@ -4,7 +4,7 @@
 
 namespace OneDark::Internal {
 
-OptionsPage::OptionsPage(const Settings &settings, QObject *parent)
+OptionsPage::OptionsPage(const Settings &settings, QObject *parent) noexcept
     : IOptionsPage(parent, true) {
     this->setSettings(settings);
     this->setId("OneDarkSettings");
@@ -17,8 +17,8 @@ OptionsPage::OptionsPage(const Settings &settings, QObject *parent)
     this->setCategoryIcon(Utils::Icon({{iconMask, iconColor}}, iconStyle));
 }
 
-void OptionsPage::setSettings(const Settings &settings) {
-    this->m_settings = settings;
+void OptionsPage::setSettings(Settings settings) noexcept {
+    this->m_settings = std::move(settings);
 }
 
 QWidget *OptionsPage::widget() {
@@ -33,7 +33,7 @@ void OptionsPage::apply() {
     Settings newSettings = this->m_widget->settings();
 
     if (newSettings != this->m_settings) {
-        this->m_settings = newSettings;
+        this->m_settings = std::move(newSettings);
         emit settingsChanged(this->m_settings);
     }
 }
