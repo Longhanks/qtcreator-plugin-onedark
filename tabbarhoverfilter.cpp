@@ -35,7 +35,7 @@ bool TabHoverFilter::eventFilter(QObject *watched, QEvent *event) {
     }
 
     if (event->type() == QEvent::HoverEnter) {
-        auto hoverEvent = static_cast<QHoverEvent *>(event);
+        const auto hoverEvent = static_cast<QHoverEvent *>(event);
         this->m_lastHoveredTabIndex = tabBar->tabAt(hoverEvent->pos());
         if (this->m_lastHoveredTabIndex >= 0) {
             auto *holder = OneDarkProxyStyle::faderForTabBarIndex(
@@ -46,8 +46,8 @@ bool TabHoverFilter::eventFilter(QObject *watched, QEvent *event) {
             widthStretcher->startScale();
         }
     } else if (event->type() == QEvent::HoverMove) {
-        auto hoverEvent = static_cast<QHoverEvent *>(event);
-        int newIndex = tabBar->tabAt(hoverEvent->pos());
+        const auto hoverEvent = static_cast<QHoverEvent *>(event);
+        const int newIndex = tabBar->tabAt(hoverEvent->pos());
         if (newIndex != this->m_lastHoveredTabIndex) {
             if (this->m_lastHoveredTabIndex >= 0) {
                 auto *holder = OneDarkProxyStyle::faderForTabBarIndex(

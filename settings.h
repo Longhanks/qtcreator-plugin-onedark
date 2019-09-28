@@ -4,17 +4,15 @@ class QSettings;
 
 namespace OneDark::Internal {
 
-class Settings {
-
-public:
+struct Settings final {
     bool enableTabBarTheme = true;
     bool forceHideMnemonics = true;
     bool disableDialogButtonBoxIcons = true;
     bool suppressHighlightColorFocusedTreeViewItems = true;
 
-    void save(QSettings *settings) const;
-    void load(QSettings *settings);
-    bool equals(const Settings &other) const;
+    void save(QSettings &settings) const noexcept;
+    void load(QSettings &settings) noexcept;
+    bool equals(const Settings &other) const noexcept;
 };
 
 bool operator==(Settings &s1, Settings &s2);

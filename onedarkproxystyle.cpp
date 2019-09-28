@@ -15,6 +15,7 @@
 
 #include <cmath>
 #include <memory>
+#include <tuple>
 #include <unordered_map>
 
 namespace OneDark::Internal {
@@ -23,7 +24,8 @@ static std::unordered_map<const QTabBar *, std::vector<FaderHolder *>> *faders;
 static std::unordered_map<const QTabBar *, WidthStretcher *> *widthStretchers;
 static std::unordered_map<const QTabBar *, TabHoverFilter *> *filters;
 
-OneDarkProxyStyle::OneDarkProxyStyle(QStyle *style) : QProxyStyle(style) {
+OneDarkProxyStyle::OneDarkProxyStyle(QStyle *style) noexcept
+    : QProxyStyle(style) {
     this->m_iconTabCloseNormal = QIcon(":/icons/tab-close-normal.svg");
     this->m_iconTabCloseHover = QIcon(":/icons/tab-close-hover.svg");
     faders =
@@ -57,23 +59,23 @@ void OneDarkProxyStyle::drawPrimitive(PrimitiveElement element,
             return;
         }
         if (element == PE_FrameTabBarBase) {
-            if (const QStyleOptionTabBarBase *tbb =
+            if (const auto *styleOptionTabBarBase =
                     qstyleoption_cast<const QStyleOptionTabBarBase *>(
                         option)) {
-                const_cast<QStyleOptionTabBarBase *>(tbb)->palette.setColor(
-                    QPalette::Light, QColor(33, 37, 43));
+                const_cast<QStyleOptionTabBarBase *>(styleOptionTabBarBase)
+                    ->palette.setColor(QPalette::Light, QColor(33, 37, 43));
             }
         }
     }
 
     if (this->m_settings.suppressHighlightColorFocusedTreeViewItems) {
         if (element == PE_PanelItemViewRow) {
-            if (const QStyleOptionViewItem *styleOptionViewItem =
+            if (const auto *styleOptionViewItem =
                     qstyleoption_cast<const QStyleOptionViewItem *>(option)) {
-                QStyleOptionViewItem *nonConstStyleOptionViewItem =
+                auto *mutableStyleOptionViewItem =
                     const_cast<QStyleOptionViewItem *>(styleOptionViewItem);
-                nonConstStyleOptionViewItem->state =
-                    nonConstStyleOptionViewItem->state & ~State_HasFocus;
+                mutableStyleOptionViewItem->state =
+                    mutableStyleOptionViewItem->state & ~State_HasFocus;
             }
         }
     }
@@ -112,7 +114,7 @@ void OneDarkProxyStyle::drawControl(ControlElement element,
     }();
 
     if (element == CE_MenuBarItem) {
-        if (const QStyleOptionMenuItem *mbi =
+        if (const auto *mbi =
                 qstyleoption_cast<const QStyleOptionMenuItem *>(option)) {
             uint alignment = Qt::AlignCenter | Qt::TextShowMnemonic |
                              Qt::TextDontClip | Qt::TextSingleLine;
@@ -137,7 +139,7 @@ void OneDarkProxyStyle::drawControl(ControlElement element,
                         QPalette::ButtonText, QColor(92, 99, 112));
                 }
                 if (mbi->state & State_Selected) {
-                    auto hoverColor = Utils::creatorTheme()->color(
+                    const auto hoverColor = Utils::creatorTheme()->color(
                         Utils::Theme::FancyToolButtonHoverColor);
                     painter->fillRect(mbi->rect, QBrush(hoverColor));
                 }
@@ -155,17 +157,17 @@ void OneDarkProxyStyle::drawControl(ControlElement element,
 
     if (element == CE_TabBarTabShape && this->m_settings.enableTabBarTheme) {
         painter->save();
-        if (const QStyleOptionTab *tab =
+        if (const auto *tab =
                 qstyleoption_cast<const QStyleOptionTab *>(option)) {
-            bool selected = tab->state & State_Selected;
-            bool onlyOne = tab->position == QStyleOptionTab::OnlyOneTab;
-            bool rtlHorTabs = (tab->direction == Qt::RightToLeft &&
-                               (tab->shape == QTabBar::RoundedNorth ||
-                                tab->shape == QTabBar::RoundedSouth));
-            bool lastTab =
+            const bool selected = tab->state & State_Selected;
+            const bool onlyOne = tab->position == QStyleOptionTab::OnlyOneTab;
+            const bool rtlHorTabs = (tab->direction == Qt::RightToLeft &&
+                                     (tab->shape == QTabBar::RoundedNorth ||
+                                      tab->shape == QTabBar::RoundedSouth));
+            const bool lastTab =
                 ((!rtlHorTabs && tab->position == QStyleOptionTab::End) ||
                  (rtlHorTabs && tab->position == QStyleOptionTab::Beginning));
-            int overlap = this->proxy()->pixelMetric(
+            const int overlap = this->proxy()->pixelMetric(
                 PM_TabBarTabOverlap, option, widget);
             const_cast<QStyleOptionTab *>(tab)->rect.adjust(0, 0, 0, -overlap);
 
@@ -208,37 +210,47 @@ void OneDarkProxyStyle::drawControl(ControlElement element,
 
             if (!selected) {
                 painter->save();
-                auto tabbar = static_cast<const QTabBar *>(widget);
-                auto currentIndex = tabbar->tabAt(option->rect.topLeft());
-                auto fader = OneDarkProxyStyle::faderForTabBarIndex(
+                const auto *tabbar = static_cast<const QTabBar *>(widget);
+                const auto currentIndex =
+                    tabbar->tabAt(option->rect.topLeft());
+                const auto *fader = OneDarkProxyStyle::faderForTabBarIndex(
                     const_cast<QTabBar *>(tabbar),
                     static_cast<std::size_t>(currentIndex));
-                auto hoverColor = QColor(37, 41, 48);
-                hoverColor.setAlpha(
-                    static_cast<int>(hoverColor.alpha() * fader->fader()));
+                const auto hoverColor = [fader] {
+                    auto hoverColor_ = QColor(37, 41, 48);
+                    hoverColor_.setAlpha(static_cast<int>(hoverColor_.alpha() *
+                                                          fader->fader()));
+                    return hoverColor_;
+                }();
                 painter->setBrush(QBrush(hoverColor));
-                auto width = option->rect.width();
-                if (lastTab || onlyOne) {
-                    width -= 1;
-                }
+                const auto width = [option, lastTab, onlyOne] {
+                    auto width_ = option->rect.width();
+                    if (lastTab || onlyOne) {
+                        width_ -= 1;
+                    }
+                    return width_;
+                }();
                 painter->drawRect(option->rect.left() + 1,
                                   option->rect.top() + 2,
                                   width - 1,
                                   option->rect.height() - 2);
                 painter->restore();
 
-                auto widthStretcher =
+                auto *widthStretcher =
                     OneDarkProxyStyle::widthStretcherForTabBar(
                         const_cast<QTabBar *>(tabbar));
-                auto topBarHoverColor = Utils::creatorTheme()->color(
-                    Utils::Theme::FancyToolButtonHoverColor);
-                topBarHoverColor.setAlpha(
-                    static_cast<int>(hoverColor.alpha() * fader->fader()));
+                const auto topBarHoverColor = [fader, &hoverColor] {
+                    auto topBarHoverColor_ = Utils::creatorTheme()->color(
+                        Utils::Theme::FancyToolButtonHoverColor);
+                    topBarHoverColor_.setAlpha(
+                        static_cast<int>(hoverColor.alpha() * fader->fader()));
+                    return topBarHoverColor_;
+                }();
 
-                auto topBarWidth =
+                const auto topBarWidth =
                     static_cast<int>((option->rect.width() - 2) *
                                      widthStretcher->scaleFactor());
-                auto topBarTopLeft = static_cast<int>(
+                const auto topBarTopLeft = static_cast<int>(
                     option->rect.left() + 1 +
                     ((option->rect.width() - 2) / 2) - (topBarWidth / 2));
 
@@ -254,39 +266,44 @@ void OneDarkProxyStyle::drawControl(ControlElement element,
     }
 
     if (element == CE_TabBarTabLabel && this->m_settings.enableTabBarTheme) {
-        if (const QStyleOptionTab *tab =
+        if (const auto *tab =
                 qstyleoption_cast<const QStyleOptionTab *>(option)) {
-            QRect tr = tab->rect;
-            bool verticalTabs = tab->shape == QTabBar::RoundedEast ||
-                                tab->shape == QTabBar::RoundedWest ||
-                                tab->shape == QTabBar::TriangularEast ||
-                                tab->shape == QTabBar::TriangularWest;
-            int alignment = Qt::AlignCenter | Qt::TextShowMnemonic;
-            if (!this->proxy()->styleHint(
-                    SH_UnderlineShortcut, option, widget)) {
-                alignment |= Qt::TextHideMnemonic;
-            }
+            const bool verticalTabs = tab->shape == QTabBar::RoundedEast ||
+                                      tab->shape == QTabBar::RoundedWest ||
+                                      tab->shape == QTabBar::TriangularEast ||
+                                      tab->shape == QTabBar::TriangularWest;
+            const int alignment = [this, option, widget] {
+                int alignment_ = Qt::AlignCenter | Qt::TextShowMnemonic;
+                if (!this->proxy()->styleHint(
+                        SH_UnderlineShortcut, option, widget)) {
+                    alignment_ |= Qt::TextHideMnemonic;
+                }
+                return alignment_;
+            }();
             if (verticalTabs) {
                 painter->save();
-                int newX, newY, newRot;
-                if (tab->shape == QTabBar::RoundedEast ||
-                    tab->shape == QTabBar::TriangularEast) {
-                    newX = tr.width() + tr.x();
-                    newY = tr.y();
-                    newRot = 90;
-                } else {
-                    newX = tr.x();
-                    newY = tr.y() + tr.height();
-                    newRot = -90;
-                }
-                QTransform m = QTransform::fromTranslate(newX, newY);
-                m.rotate(newRot);
-                painter->setTransform(m, true);
+                const auto [newX, newY, newRot] =
+                    [tab]() -> std::tuple<int, int, int> {
+                    if (tab->shape == QTabBar::RoundedEast ||
+                        tab->shape == QTabBar::TriangularEast) {
+                        return {tab->rect.width() + tab->rect.x(),
+                                tab->rect.y(),
+                                90};
+                    }
+                    return {tab->rect.x(),
+                            tab->rect.y() + tab->rect.height(),
+                            -90};
+                }();
+                const auto transform = [](int x, int y, int rot) {
+                    auto transform_ = QTransform::fromTranslate(x, y);
+                    transform_.rotate(rot);
+                    return transform_;
+                }(newX, newY, newRot);
+                painter->setTransform(transform, true);
             }
-            QRect iconRect;
-            this->tabLayout(tab, widget, &tr, &iconRect);
+            const auto [textRect, iconRect] = this->tabLayout(tab, widget);
             if (!tab->icon.isNull()) {
-                auto window = [widget]() {
+                auto *window = [widget]() {
                     return widget ? widget->window()->windowHandle() : nullptr;
                 }();
                 QPixmap tabIcon = tab->icon.pixmap(
@@ -298,7 +315,7 @@ void OneDarkProxyStyle::drawControl(ControlElement element,
                 painter->drawPixmap(iconRect.x(), iconRect.y(), tabIcon);
             }
             QPalette textPalette = tab->palette;
-            bool selected = tab->state & State_Selected;
+            const bool selected = tab->state & State_Selected;
             if (selected) {
                 textPalette.setColor(QPalette::WindowText,
                                      QColor(171, 178, 191));
@@ -308,7 +325,7 @@ void OneDarkProxyStyle::drawControl(ControlElement element,
             }
             const_cast<QStyleOptionTab *>(tab)->palette = textPalette;
             this->proxy()->drawItemText(painter,
-                                        tr,
+                                        textRect,
                                         alignment,
                                         tab->palette,
                                         tab->state & State_Enabled,
@@ -329,21 +346,23 @@ QRect OneDarkProxyStyle::subElementRect(QStyle::SubElement element,
                                         const QWidget *widget) const {
     if (element == SE_TabBarTabRightButton ||
         element == SE_TabBarTabLeftButton) {
-        if (const QStyleOptionTab *tab =
+        if (const auto *tab =
                 qstyleoption_cast<const QStyleOptionTab *>(option)) {
             QRect r;
-            bool selected = tab->state & State_Selected;
+            const bool selected = tab->state & State_Selected;
             int verticalShift =
                 this->pixelMetric(PM_TabBarTabShiftVertical, tab, widget);
             int horizontalShift =
                 this->pixelMetric(PM_TabBarTabShiftHorizontal, tab, widget);
-            int hpadding =
-                this->pixelMetric(PM_TabBarTabHSpace, option, widget) / 2;
-            hpadding = qMax(hpadding, 4);
-            bool verticalTabs = tab->shape == QTabBar::RoundedEast ||
-                                tab->shape == QTabBar::RoundedWest ||
-                                tab->shape == QTabBar::TriangularEast ||
-                                tab->shape == QTabBar::TriangularWest;
+            const int hpadding = [this, option, widget] {
+                int hpadding_ =
+                    this->pixelMetric(PM_TabBarTabHSpace, option, widget) / 2;
+                return (hpadding_ < 4) ? 4 : hpadding_;
+            }();
+            const bool verticalTabs = tab->shape == QTabBar::RoundedEast ||
+                                      tab->shape == QTabBar::RoundedWest ||
+                                      tab->shape == QTabBar::TriangularEast ||
+                                      tab->shape == QTabBar::TriangularWest;
             QRect tr = tab->rect;
             if (tab->shape == QTabBar::RoundedSouth ||
                 tab->shape == QTabBar::TriangularSouth) {
@@ -363,14 +382,14 @@ QRect OneDarkProxyStyle::subElementRect(QStyle::SubElement element,
                 tr.setBottom(tr.bottom() - verticalShift);
                 tr.setRight(tr.right() - horizontalShift);
             }
-            QSize size = (element == SE_TabBarTabLeftButton)
-                             ? tab->leftButtonSize
-                             : tab->rightButtonSize;
-            int w = size.width();
-            int h = size.height();
-            int midHeight =
-                static_cast<int>(std::ceil(float(tr.height() - h) / 2));
-            int midWidth = ((tr.width() - w) / 2);
+            const QSize size = (element == SE_TabBarTabLeftButton)
+                                   ? tab->leftButtonSize
+                                   : tab->rightButtonSize;
+            const int w = size.width();
+            const int h = size.height();
+            const int midHeight = static_cast<int>(
+                std::ceil(static_cast<float>(tr.height() - h) / 2));
+            const int midWidth = ((tr.width() - w) / 2);
             bool atTheTop = true;
             switch (tab->shape) {
             case QTabBar::RoundedWest:
@@ -453,18 +472,18 @@ void OneDarkProxyStyle::polish(QWidget *widget) {
         QProxyStyle::polish(widget);
         return;
     }
-    auto btn = qobject_cast<QPushButton *>(widget);
-    if (btn) {
-        auto text = QPlatformTheme::removeMnemonics(btn->text());
+    auto *btn = qobject_cast<QPushButton *>(widget);
+    if (btn != nullptr) {
+        const QString text = QPlatformTheme::removeMnemonics(btn->text());
         btn->setText(text);
     }
-    auto checkbox = qobject_cast<QCheckBox *>(widget);
-    if (checkbox) {
-        auto text = QPlatformTheme::removeMnemonics(checkbox->text());
+    auto *checkbox = qobject_cast<QCheckBox *>(widget);
+    if (checkbox != nullptr) {
+        const QString text = QPlatformTheme::removeMnemonics(checkbox->text());
         checkbox->setText(text);
     }
-    auto tabBar = qobject_cast<QTabBar *>(widget);
-    if (tabBar) {
+    auto *tabBar = qobject_cast<QTabBar *>(widget);
+    if (tabBar != nullptr) {
         tabBar->setAttribute(Qt::WidgetAttribute::WA_Hover);
         (*faders)[tabBar] = {};
         (*widthStretchers)[tabBar] = new WidthStretcher(tabBar, this);
@@ -475,8 +494,8 @@ void OneDarkProxyStyle::polish(QWidget *widget) {
 }
 
 void OneDarkProxyStyle::unpolish(QWidget *widget) {
-    auto tabBar = qobject_cast<QTabBar *>(widget);
-    if (tabBar) {
+    auto *tabBar = qobject_cast<QTabBar *>(widget);
+    if (tabBar != nullptr) {
         TabHoverFilter *filter = (*filters)[tabBar];
         tabBar->removeEventFilter(filter);
         delete filter;
@@ -493,12 +512,13 @@ void OneDarkProxyStyle::unpolish(QWidget *widget) {
     QProxyStyle::unpolish(widget);
 }
 
-void OneDarkProxyStyle::setSettings(const Settings &settings) {
-    this->m_settings = settings;
+void OneDarkProxyStyle::setSettings(Settings settings) noexcept {
+    this->m_settings = std::move(settings);
 }
 
-FaderHolder *OneDarkProxyStyle::faderForTabBarIndex(QTabBar *tabBar,
-                                                    std::size_t index) {
+FaderHolder *
+OneDarkProxyStyle::faderForTabBarIndex(QTabBar *tabBar,
+                                       std::size_t index) noexcept {
     if ((*faders)[tabBar].size() < index + 1) {
         (*faders)[tabBar].resize(index + 1);
     }
@@ -510,65 +530,76 @@ FaderHolder *OneDarkProxyStyle::faderForTabBarIndex(QTabBar *tabBar,
     return holder;
 }
 
-WidthStretcher *OneDarkProxyStyle::widthStretcherForTabBar(QTabBar *tabBar) {
+WidthStretcher *
+OneDarkProxyStyle::widthStretcherForTabBar(QTabBar *tabBar) noexcept {
     return (*widthStretchers)[tabBar];
 }
 
-void OneDarkProxyStyle::tabLayout(const QStyleOptionTab *opt,
-                                  const QWidget *widget,
-                                  QRect *textRect,
-                                  QRect *iconRect) const {
-    QRect tr = opt->rect;
+std::pair<QRect, QRect>
+OneDarkProxyStyle::tabLayout(const QStyleOptionTab *opt,
+                             const QWidget *widget) const noexcept {
+    QRect textRect = opt->rect;
+    QRect iconRect;
     bool verticalTabs = opt->shape == QTabBar::RoundedEast ||
                         opt->shape == QTabBar::RoundedWest ||
                         opt->shape == QTabBar::TriangularEast ||
                         opt->shape == QTabBar::TriangularWest;
     if (verticalTabs) {
-        tr.setRect(0, 0, tr.height(), tr.width());
+        textRect.setRect(0, 0, textRect.height(), textRect.width());
     }
-    int hpadding =
+    const int hpadding =
         this->pixelMetric(QStyle::PM_TabBarTabHSpace, opt, widget) / 2;
-    int vpadding =
+    const int vpadding =
         this->pixelMetric(QStyle::PM_TabBarTabVSpace, opt, widget) / 2;
 
-    tr.adjust(hpadding, -vpadding, -hpadding, vpadding);
+    textRect.adjust(hpadding, -vpadding, -hpadding, vpadding);
     if (!opt->leftButtonSize.isEmpty()) {
-        tr.setLeft(tr.left() + 4 +
-                   (verticalTabs ? opt->leftButtonSize.height()
-                                 : opt->leftButtonSize.width()));
+        textRect.setLeft(textRect.left() + 4 +
+                         (verticalTabs ? opt->leftButtonSize.height()
+                                       : opt->leftButtonSize.width()));
     }
     if (!opt->rightButtonSize.isEmpty()) {
-        tr.setRight(tr.right() - 4 -
-                    (verticalTabs ? opt->rightButtonSize.height()
-                                  : opt->rightButtonSize.width()));
+        textRect.setRight(textRect.right() - 4 -
+                          (verticalTabs ? opt->rightButtonSize.height()
+                                        : opt->rightButtonSize.width()));
     }
     if (!opt->icon.isNull()) {
-        QSize iconSize = opt->iconSize;
-        if (!iconSize.isValid()) {
-            int iconExtent = this->pixelMetric(QStyle::PM_SmallIconSize);
-            iconSize = QSize(iconExtent, iconExtent);
-        }
-        QSize tabIconSize = opt->icon.actualSize(
-            iconSize,
-            (opt->state & QStyle::State_Enabled) ? QIcon::Normal
-                                                 : QIcon::Disabled,
-            (opt->state & QStyle::State_Selected) ? QIcon::On : QIcon::Off);
-        tabIconSize = QSize(qMin(tabIconSize.width(), iconSize.width()),
-                            qMin(tabIconSize.height(), iconSize.height()));
+        const QSize iconSize = [opt, this] {
+            QSize iconSize_ = opt->iconSize;
+            if (!iconSize_.isValid()) {
+                int iconExtent = this->pixelMetric(QStyle::PM_SmallIconSize);
+                iconSize_ = QSize(iconExtent, iconExtent);
+            }
+            return iconSize_;
+        }();
+
+        const QSize tabIconSize = [&iconSize, opt] {
+            QSize tabIconSize_ = opt->icon.actualSize(
+                iconSize,
+                (opt->state & QStyle::State_Enabled) ? QIcon::Normal
+                                                     : QIcon::Disabled,
+                (opt->state & QStyle::State_Selected) ? QIcon::On
+                                                      : QIcon::Off);
+            tabIconSize_ =
+                QSize(qMin(tabIconSize_.width(), iconSize.width()),
+                      qMin(tabIconSize_.height(), iconSize.height()));
+            return tabIconSize_;
+        }();
         const int offsetX = (iconSize.width() - tabIconSize.width()) / 2;
-        *iconRect = QRect(tr.left() + offsetX,
-                          tr.center().y() - tabIconSize.height() / 2,
-                          tabIconSize.width(),
-                          tabIconSize.height());
+        iconRect = QRect(textRect.left() + offsetX,
+                         textRect.center().y() - tabIconSize.height() / 2,
+                         tabIconSize.width(),
+                         tabIconSize.height());
         if (!verticalTabs) {
-            *iconRect = this->visualRect(opt->direction, opt->rect, *iconRect);
+            iconRect = this->visualRect(opt->direction, opt->rect, iconRect);
         }
-        tr.setLeft(tr.left() + tabIconSize.width() + 4);
+        textRect.setLeft(textRect.left() + tabIconSize.width() + 4);
     }
     if (!verticalTabs) {
-        tr = this->visualRect(opt->direction, opt->rect, tr);
+        textRect = this->visualRect(opt->direction, opt->rect, textRect);
     }
-    *textRect = tr;
+
+    return {std::move(textRect), std::move(iconRect)};
 }
 
 } // namespace OneDark::Internal

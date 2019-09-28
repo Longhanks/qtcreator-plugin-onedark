@@ -4,6 +4,8 @@
 
 #include <QProxyStyle>
 
+#include <utility>
+
 class QStyleOptionTab;
 class QTabBar;
 
@@ -12,12 +14,17 @@ namespace OneDark::Internal {
 class FaderHolder;
 class WidthStretcher;
 
-class OneDarkProxyStyle : public QProxyStyle {
+class OneDarkProxyStyle final : public QProxyStyle {
     Q_OBJECT
 
 public:
-    OneDarkProxyStyle(QStyle *style = nullptr);
+    explicit OneDarkProxyStyle(QStyle *style = nullptr) noexcept;
+    OneDarkProxyStyle(const OneDarkProxyStyle &) = delete;
+    OneDarkProxyStyle &operator=(const OneDarkProxyStyle &) = delete;
+    OneDarkProxyStyle(OneDarkProxyStyle &&) = delete;
+    OneDarkProxyStyle &operator=(OneDarkProxyStyle &&) = delete;
     ~OneDarkProxyStyle() noexcept override;
+
     void drawPrimitive(PrimitiveElement element,
                        const QStyleOption *option,
                        QPainter *painter,
@@ -41,10 +48,10 @@ public:
     void unpolish(QWidget *widget) override;
     using QProxyStyle::unpolish;
 
-    void setSettings(const Settings &settings);
+    void setSettings(Settings settings) noexcept;
     static FaderHolder *faderForTabBarIndex(QTabBar *tabBar,
-                                            std::size_t index);
-    static WidthStretcher *widthStretcherForTabBar(QTabBar *tabBar);
+                                            std::size_t index) noexcept;
+    static WidthStretcher *widthStretcherForTabBar(QTabBar *tabBar) noexcept;
 
 private:
     Settings m_settings;
@@ -52,10 +59,8 @@ private:
     QIcon m_iconTabCloseNormal;
     QIcon m_iconTabCloseHover;
 
-    void tabLayout(const QStyleOptionTab *opt,
-                   const QWidget *widget,
-                   QRect *textRect,
-                   QRect *iconRect) const;
+    std::pair<QRect, QRect> tabLayout(const QStyleOptionTab *opt,
+                                      const QWidget *widget) const noexcept;
 };
 
 } // namespace OneDark::Internal

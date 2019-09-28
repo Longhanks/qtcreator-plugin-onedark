@@ -31,7 +31,7 @@ OneDarkPlugin::~OneDarkPlugin() noexcept {
 
 bool OneDarkPlugin::initialize([[maybe_unused]] const QStringList &arguments,
                                [[maybe_unused]] QString *errorString) {
-    this->m_settings.load(Core::ICore::settings());
+    this->m_settings.load(*Core::ICore::settings());
 
     auto *oneDarkStyle = new OneDarkProxyStyle(QApplication::style());
     oneDarkStyle->setSettings(this->m_settings);
@@ -49,13 +49,13 @@ bool OneDarkPlugin::initialize([[maybe_unused]] const QStringList &arguments,
         Core::ICore::instance(),
         &Core::ICore::saveSettingsRequested,
         this,
-        [this] { this->m_settings.save(Core::ICore::settings()); });
+        [this] { this->m_settings.save(*Core::ICore::settings()); });
 
     return true;
 }
 
 void OneDarkPlugin::onSettingsChanged(Settings settings) noexcept {
-    settings.save(Core::ICore::settings());
+    settings.save(*Core::ICore::settings());
     this->m_settings = std::move(settings);
     auto *style = qobject_cast<OneDarkProxyStyle *>(QApplication::style());
     if (style != nullptr) {

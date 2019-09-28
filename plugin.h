@@ -17,6 +17,10 @@ class OneDarkPlugin final : public ExtensionSystem::IPlugin {
 
 public:
     explicit OneDarkPlugin() noexcept;
+    OneDarkPlugin(const OneDarkPlugin &) = delete;
+    OneDarkPlugin &operator=(const OneDarkPlugin &) = delete;
+    OneDarkPlugin(OneDarkPlugin &&) = delete;
+    OneDarkPlugin &operator=(OneDarkPlugin &&) = delete;
     ~OneDarkPlugin() noexcept override;
 
     bool initialize(const QStringList &arguments,

@@ -4,11 +4,16 @@
 
 namespace OneDark::Internal {
 
-class TabHoverFilter : public QObject {
+class TabHoverFilter final : public QObject {
     Q_OBJECT
 
 public:
     using QObject::QObject;
+    TabHoverFilter(const TabHoverFilter &) = delete;
+    TabHoverFilter &operator=(const TabHoverFilter &) = delete;
+    TabHoverFilter(TabHoverFilter &&) = delete;
+    TabHoverFilter &operator=(TabHoverFilter &&) = delete;
+    ~TabHoverFilter() noexcept override = default;
 
 protected:
     bool eventFilter(QObject *watched, QEvent *event) override;

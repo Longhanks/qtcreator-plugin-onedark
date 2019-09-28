@@ -10,6 +10,11 @@ class FaderHolder final : public QObject {
 
 public:
     explicit FaderHolder(QWidget *target, QObject *parent = nullptr) noexcept;
+    FaderHolder(const FaderHolder &) = delete;
+    FaderHolder &operator=(const FaderHolder &) = delete;
+    FaderHolder(FaderHolder &&) = delete;
+    FaderHolder &operator=(FaderHolder &&) = delete;
+    ~FaderHolder() noexcept override = default;
 
     double fader() const noexcept;
     void setFader(double value) noexcept;

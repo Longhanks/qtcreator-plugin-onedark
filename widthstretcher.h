@@ -4,21 +4,26 @@
 
 namespace OneDark::Internal {
 
-class WidthStretcher : public QObject {
+class WidthStretcher final : public QObject {
     Q_OBJECT
     Q_PROPERTY(double scaleFactor READ scaleFactor WRITE setScaleFactor)
 
 public:
-    WidthStretcher(QWidget *target, QObject *parent = nullptr);
+    WidthStretcher(QWidget *target, QObject *parent = nullptr) noexcept;
+    WidthStretcher(const WidthStretcher &) = delete;
+    WidthStretcher &operator=(const WidthStretcher &) = delete;
+    WidthStretcher(WidthStretcher &&) = delete;
+    WidthStretcher &operator=(WidthStretcher &&) = delete;
+    ~WidthStretcher() noexcept override = default;
 
-    double scaleFactor() const;
-    void setScaleFactor(double value);
+    double scaleFactor() const noexcept;
+    void setScaleFactor(double value) noexcept;
 
-    void startScale();
+    void startScale() noexcept;
 
 private:
     double m_scaleFactor = 100.0;
-    QWidget *m_target;
+    QWidget *m_target = nullptr;
 };
 
 } // namespace OneDark::Internal

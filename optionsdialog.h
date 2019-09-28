@@ -6,13 +6,18 @@ class QCheckBox;
 
 namespace OneDark::Internal {
 
-class Settings;
+struct Settings;
 
 class OptionsDialog final : public QWidget {
     Q_OBJECT
 
 public:
     explicit OptionsDialog(QWidget *parent = nullptr) noexcept;
+    OptionsDialog(const OptionsDialog &) = delete;
+    OptionsDialog &operator=(const OptionsDialog &) = delete;
+    OptionsDialog(OptionsDialog &&) = delete;
+    OptionsDialog &operator=(OptionsDialog &&) = delete;
+    ~OptionsDialog() noexcept override = default;
 
     void setSettings(const Settings &settings) noexcept;
     Settings settings() const noexcept;
