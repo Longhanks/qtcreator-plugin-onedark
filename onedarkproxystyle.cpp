@@ -4,6 +4,7 @@
 #include "tabbarhoverfilter.h"
 #include "widthstretcher.h"
 
+#include <coreplugin/icore.h>
 #include <utils/theme/theme.h>
 
 #include <QCheckBox>
@@ -132,7 +133,7 @@ void OneDarkProxyStyle::drawControl(ControlElement element,
                     painter, mbi->rect, static_cast<int>(alignment), pix);
             } else {
                 const bool isActive =
-                    widget->parentWidget()->property("active").toBool();
+                    Core::ICore::mainWindow()->isActiveWindow();
                 if (mbi->state & State_Enabled &&
                     !(mbi->state & State_Selected) && !isActive) {
                     const_cast<QStyleOptionMenuItem *>(mbi)->palette.setColor(
@@ -250,9 +251,9 @@ void OneDarkProxyStyle::drawControl(ControlElement element,
                 const auto topBarWidth =
                     static_cast<int>((option->rect.width() - 2) *
                                      widthStretcher->scaleFactor());
-                const auto topBarTopLeft = static_cast<int>(
-                    option->rect.left() + 1 +
-                    ((option->rect.width() - 2) / 2) - (topBarWidth / 2));
+                const auto topBarTopLeft = option->rect.left() + 1 +
+                                           ((option->rect.width() - 2) / 2) -
+                                           (topBarWidth / 2);
 
                 painter->fillRect(topBarTopLeft,
                                   option->rect.top(),
@@ -459,7 +460,7 @@ int OneDarkProxyStyle::pixelMetric(PixelMetric metric,
         return 0;
     }
     if (metric == PM_MenuBarVMargin) {
-        return 5;
+        return 4;
     }
     if (metric == PM_TabBarTabShiftVertical) {
         return 0;
